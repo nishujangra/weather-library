@@ -62,8 +62,8 @@ import (
     "fmt"
     "log"
 
-    "github.com/yourusername/weather-library/pkg/weather"
-    "github.com/yourusername/weather-library/config"
+    "github.com/nishujangra/weather-library/pkg/weather"
+    "github.com/nishujangra/weather-library/config"
 )
 
 func main() {
