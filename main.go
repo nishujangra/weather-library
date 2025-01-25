@@ -3,12 +3,13 @@ package main
 import (
 	"fmt"
 	"log"
-	"weather-api/config"
-	"weather-api/pkg/weather"
+	"weather-library/config"
+	"weather-library/pkg/weather"
 )
 
 func main() {
 	APIkey := config.GetAPIKey()
+	BaseUrl := config.GetBaseUrl()
 
 	if APIkey == "" {
 		log.Fatal("API key in environment variable is not set")
@@ -16,7 +17,7 @@ func main() {
 
 	city := "Delhi"
 
-	weatherClient := weather.NewWeatherClient(APIkey)
+	weatherClient := weather.NewWeatherClient(APIkey, BaseUrl)
 	data, err := weatherClient.GetWeather(city)
 
 	if err != nil {

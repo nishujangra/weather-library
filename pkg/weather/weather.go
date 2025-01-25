@@ -5,10 +5,15 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
+
+	"weather-library/config"
+	"weather-library/pkg/geocoder"
 )
 
 type WeatherClient struct {
-	APIkey string
+	APIkey  string
+	BaseUrl string
 }
 
 type Weather struct {
@@ -17,14 +22,40 @@ type Weather struct {
 	Descriptipn string  `json:"description"`
 }
 
-func NewWeatherClient(APIkey string) *WeatherClient {
-	return &WeatherClient{APIkey: APIkey}
+func NewWeatherClient(APIkey string, BaseUrl string) *WeatherClient {
+	return &WeatherClient{
+		APIkey:  APIkey,
+		BaseUrl: BaseUrl,
+	}
 }
 
 func (wc *WeatherClient) GetWeather(city string) (*Weather, error) {
-	url := fmt.Sprintf("http://api.openweathermap.org/data/2.5/weather?q=%s&appid=%s&units=metric", city, wc.APIkey)
+	gcBaseUrl := config.GetGeoBaseUrl()
 
-	response, err := http.Get(url)
+	gc := geocoder.NewGeoClient(wc.APIkey, gcBaseUrl)
+	lat, long, err := gc.GetLatLong(city)
+
+	if err != nil {
+		return nil, err
+	}
+
+	baseUrl := wc.BaseUrl
+
+	reqUrl, err := url.Parse(baseUrl)
+
+	if err != nil {
+		return nil, err
+	}
+
+	query := reqUrl.Query()
+	query.Add("lat", fmt.Sprintf("%.2f", lat))
+	query.Add("lon", fmt.Sprintf("%.2f", long))
+	query.Add("cnt", "1")
+	query.Add("appid", wc.APIkey)
+
+	reqUrl.RawQuery = query.Encode()
+
+	response, err := http.Get(reqUrl.String())
 
 	if err != nil {
 		return nil, err
@@ -43,13 +74,15 @@ func (wc *WeatherClient) GetWeather(city string) (*Weather, error) {
 	}
 
 	var parsedData struct {
-		Main struct {
-			Temperature float64 `json:"temp"`
-			Humidity    float64 `json:"humidity"`
-		}
-		Weather []struct {
-			Description string `json:"description"`
-		} `json:"weather"`
+		List []struct {
+			Main struct {
+				Temperature float64 `json:"temp"`
+				Humidity    float64 `json:"humidity"`
+			} `json:"main"`
+			Weather []struct {
+				Description string `json:"description"`
+			} `json:"weather"`
+		} `json:"list"`
 	}
 
 	if err := json.Unmarshal(body, &parsedData); err != nil {
@@ -57,8 +90,8 @@ func (wc *WeatherClient) GetWeather(city string) (*Weather, error) {
 	}
 
 	return &Weather{
-		Temperature: parsedData.Main.Temperature,
-		Humidity:    parsedData.Main.Humidity,
-		Descriptipn: parsedData.Weather[0].Description,
+		Temperature: parsedData.List[0].Main.Temperature,
+		Humidity:    parsedData.List[0].Main.Humidity,
+		Descriptipn: parsedData.List[0].Weather[0].Description,
 	}, nil
 }

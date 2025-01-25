@@ -1,4 +1,4 @@
-module weather-api
+module weather-library
 
 go 1.23.5
 
