@@ -6,32 +6,24 @@ import (
 	"github.com/joho/godotenv"
 )
 
-func GetAPIKey() string {
-	err := godotenv.Load()
-
-	if err != nil {
-		panic("Error loading .env file")
-	}
-
-	return os.Getenv("API_KEY")
+type Client struct {
+	APIKey     string
+	BaseUrl    string
+	GeoBaseUrl string
+	// DatabseUrl string
 }
 
-func GetBaseUrl() string {
+func LoadConfig() *Client {
 	err := godotenv.Load()
 
 	if err != nil {
 		panic("Error loading .env file")
 	}
 
-	return os.Getenv("WEATHER_API_BASE_URL")
-}
-
-func GetGeoBaseUrl() string {
-	err := godotenv.Load()
-
-	if err != nil {
-		panic("Error loading .env file")
+	return &Client{
+		APIKey:     os.Getenv("API_KEY"),
+		BaseUrl:    os.Getenv("WEATHER_API_BASE_URL"),
+		GeoBaseUrl: os.Getenv("GEOCODER_API_BASE_URL"),
+		// DatabseUrl: os.Getenv("DATABASE_URL"),
 	}
-
-	return os.Getenv("GEOCODER_API_BASE_URL")
 }

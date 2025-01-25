@@ -8,16 +8,16 @@ import (
 )
 
 func main() {
-	APIkey := config.GetAPIKey()
-	BaseUrl := config.GetBaseUrl()
+	client := config.LoadConfig()
 
-	if APIkey == "" {
+	if client.APIKey == "" {
 		log.Fatal("API key in environment variable is not set")
 	}
 
 	city := "Delhi"
 
-	weatherClient := weather.NewWeatherClient(APIkey, BaseUrl)
+	weatherClient := weather.NewWeatherClient(client)
+
 	data, err := weatherClient.GetWeather(city)
 
 	if err != nil {

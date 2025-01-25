@@ -11,28 +11,26 @@ import (
 	"weather-library/pkg/geocoder"
 )
 
-type WeatherClient struct {
-	APIkey  string
-	BaseUrl string
-}
-
 type Weather struct {
 	Temperature float64 `json:"temp"`
 	Humidity    float64 `json:"humidity"`
 	Descriptipn string  `json:"description"`
 }
 
-func NewWeatherClient(APIkey string, BaseUrl string) *WeatherClient {
+type WeatherClient struct {
+	config.Client
+}
+
+func NewWeatherClient(client *config.Client) *WeatherClient {
 	return &WeatherClient{
-		APIkey:  APIkey,
-		BaseUrl: BaseUrl,
+		Client: *client,
 	}
 }
 
 func (wc *WeatherClient) GetWeather(city string) (*Weather, error) {
-	gcBaseUrl := config.GetGeoBaseUrl()
+	gcBaseUrl := wc.GeoBaseUrl
 
-	gc := geocoder.NewGeoClient(wc.APIkey, gcBaseUrl)
+	gc := geocoder.NewGeoClient(wc.APIKey, gcBaseUrl)
 	lat, long, err := gc.GetLatLong(city)
 
 	if err != nil {
@@ -51,7 +49,8 @@ func (wc *WeatherClient) GetWeather(city string) (*Weather, error) {
 	query.Add("lat", fmt.Sprintf("%.2f", lat))
 	query.Add("lon", fmt.Sprintf("%.2f", long))
 	query.Add("cnt", "1")
-	query.Add("appid", wc.APIkey)
+	query.Add("appid", wc.APIKey)
+	query.Add("units", "metric")
 
 	reqUrl.RawQuery = query.Encode()
 
