@@ -112,35 +112,41 @@ To use this library in your Go project, follow these steps:
    package main
 
    import (
-       "fmt"
-       "weather-library/config"
-       "weather-library/pkg/weather"
+	   "fmt"
+	   "log"
+	   "weather-library/config"
+	   "weather-library/pkg/weather"
    )
-
+   
    func main() {
-       // Load the configuration from the .env file
-       clientConfig := config.LoadConfig()
-
-       // Create a new WeatherClient
-       weatherClient := weather.NewWeatherClient(clientConfig)
-
-       // Get weather data for a city
-       city := "New York"
-       weatherData, err := weatherClient.GetWeather(city)
-       if err != nil {
-           fmt.Println("Error fetching weather:", err)
-           return
-       }
-
-       // Print the weather details
-       fmt.Printf("Weather in %s:\n", city)
-       fmt.Printf("Temperature: %.2f°C (%.2f°F)\n", weatherData.Temperature, weather.ConvertCeliusToFahrenheit(weatherData.Temperature))
-       fmt.Printf("Humidity: %.2f%%\n", weatherData.Humidity)
-       fmt.Printf("Description: %s\n", weatherData.Descriptipn)
-
-       // Weather data is automatically stored in the database
-       fmt.Println("Weather data stored in the database.")
+   	client := config.LoadConfig()
+   
+   	if client.APIKey == "" {
+   		log.Fatal("API key in environment variable is not set")
+   	}
+   
+   	city := "Delhi"
+   	days := "1"
+   
+   	weatherClient := weather.NewWeatherClient(client)
+   
+   	data, err := weatherClient.GetWeather(city, days)
+   
+   	if err != nil {
+   		log.Fatalf("Error getting weather data: %s", err)
+   	}
+   
+   	for _, d := range *data {
+   		fmt.Println("-------------------------------------------------")
+   		fmt.Printf("City: %s\n", city)
+   		fmt.Printf("Temperature: %.2f°C or %.2f°F\n", d.Temperature, weather.ConvertCeliusToFahrenheit(d.Temperature))
+   		fmt.Printf("Humidity: %.2f%\n", d.Humidity)
+   		fmt.Printf("Description: %s\n", d.Descriptipn)
+   		fmt.Printf("Date of Forecast: %s\n", d.DateOfForecast)
+   		fmt.Println("-------------------------------------------------")
+   	}
    }
+
    ```
 
 3. **Run Your Project**
