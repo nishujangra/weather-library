@@ -15,17 +15,23 @@ func main() {
 	}
 
 	city := "Delhi"
+	days := "1"
 
 	weatherClient := weather.NewWeatherClient(client)
 
-	data, err := weatherClient.GetWeather(city)
+	data, err := weatherClient.GetWeather(city, days)
 
 	if err != nil {
 		log.Fatalf("Error getting weather data: %s", err)
 	}
 
-	fmt.Printf("Weather in %s\n\n", city)
-	fmt.Printf("Temperature: %.2f°C or %.2f°F\n", data.Temperature, weather.ConvertCeliusToFahrenheit(data.Temperature))
-	fmt.Printf("Humidity: %.2f%%\n", data.Humidity)
-	fmt.Printf("Description: %s\n", data.Descriptipn)
+	for _, d := range *data {
+		fmt.Println("-------------------------------------------------")
+		fmt.Printf("City: %s\n", city)
+		fmt.Printf("Temperature: %.2f°C or %.2f°F\n", d.Temperature, weather.ConvertCeliusToFahrenheit(d.Temperature))
+		fmt.Printf("Humidity: %.2f%\n", d.Humidity)
+		fmt.Printf("Description: %s\n", d.Descriptipn)
+		fmt.Printf("Date of Forecast: %s\n", d.DateOfForecast)
+		fmt.Println("-------------------------------------------------")
+	}
 }

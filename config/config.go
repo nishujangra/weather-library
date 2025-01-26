@@ -6,11 +6,16 @@ import (
 	"github.com/joho/godotenv"
 )
 
+const (
+	WeatherApiBaseUrl  = "https://api.openweathermap.org/data/2.5/forecast"
+	GeocoderApiBaseUrl = "https://api.opencagedata.com/geo/1.0/direct"
+)
+
 type Client struct {
-	APIKey     string
-	BaseUrl    string
-	GeoBaseUrl string
-	// DatabseUrl string
+	APIKey      string
+	BaseUrl     string
+	GeoBaseUrl  string
+	DatabaseUrl string
 }
 
 func LoadConfig() *Client {
@@ -21,9 +26,9 @@ func LoadConfig() *Client {
 	}
 
 	return &Client{
-		APIKey:     os.Getenv("API_KEY"),
-		BaseUrl:    os.Getenv("WEATHER_API_BASE_URL"),
-		GeoBaseUrl: os.Getenv("GEOCODER_API_BASE_URL"),
-		// DatabseUrl: os.Getenv("DATABASE_URL"),
+		APIKey:      os.Getenv("API_KEY"),
+		BaseUrl:     WeatherApiBaseUrl,
+		GeoBaseUrl:  GeocoderApiBaseUrl,
+		DatabaseUrl: os.Getenv("DATABASE_URL"),
 	}
 }

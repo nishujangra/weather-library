@@ -8,13 +8,15 @@ import (
 	"net/url"
 
 	"weather-library/config"
+	"weather-library/pkg/database"
 	"weather-library/pkg/geocoder"
 )
 
-type Weather struct {
-	Temperature float64 `json:"temp"`
-	Humidity    float64 `json:"humidity"`
-	Descriptipn string  `json:"description"`
+type Weather []struct {
+	Temperature    float64 `json:"temp"`
+	Humidity       float64 `json:"humidity"`
+	Descriptipn    string  `json:"description"`
+	DateOfForecast string  `json:"dt_txt"`
 }
 
 type WeatherClient struct {
@@ -27,11 +29,15 @@ func NewWeatherClient(client *config.Client) *WeatherClient {
 	}
 }
 
-func (wc *WeatherClient) GetWeather(city string) (*Weather, error) {
+func (wc *WeatherClient) GetWeather(city string, days string) (*Weather, error) {
 	gcBaseUrl := wc.GeoBaseUrl
 
 	gc := geocoder.NewGeoClient(wc.APIKey, gcBaseUrl)
 	lat, long, err := gc.GetLatLong(city)
+
+	db := database.NewDatabase(wc.DatabaseUrl)
+	db.CreateTable()
+	defer db.Connection.Close()
 
 	if err != nil {
 		return nil, err
@@ -48,7 +54,7 @@ func (wc *WeatherClient) GetWeather(city string) (*Weather, error) {
 	query := reqUrl.Query()
 	query.Add("lat", fmt.Sprintf("%.2f", lat))
 	query.Add("lon", fmt.Sprintf("%.2f", long))
-	query.Add("cnt", "1")
+	query.Add("cnt", days)
 	query.Add("appid", wc.APIKey)
 	query.Add("units", "metric")
 
@@ -81,6 +87,7 @@ func (wc *WeatherClient) GetWeather(city string) (*Weather, error) {
 			Weather []struct {
 				Description string `json:"description"`
 			} `json:"weather"`
+			DateOfForecast string `json:"dt_txt"`
 		} `json:"list"`
 	}
 
@@ -88,9 +95,31 @@ func (wc *WeatherClient) GetWeather(city string) (*Weather, error) {
 		return nil, err
 	}
 
-	return &Weather{
-		Temperature: parsedData.List[0].Main.Temperature,
-		Humidity:    parsedData.List[0].Main.Humidity,
-		Descriptipn: parsedData.List[0].Weather[0].Description,
-	}, nil
+	weather := Weather{}
+
+	for _, data := range parsedData.List {
+		db.InsertWeatherData(
+			city,
+			lat,
+			long,
+			data.Main.Temperature,
+			data.Main.Humidity,
+			data.Weather[0].Description,
+			data.DateOfForecast,
+		)
+
+		weather = append(weather, struct {
+			Temperature    float64 `json:"temp"`
+			Humidity       float64 `json:"humidity"`
+			Descriptipn    string  `json:"description"`
+			DateOfForecast string  `json:"dt_txt"`
+		}{
+			Temperature:    data.Main.Temperature,
+			Humidity:       data.Main.Humidity,
+			Descriptipn:    data.Weather[0].Description,
+			DateOfForecast: data.DateOfForecast,
+		})
+	}
+
+	return &weather, nil
 }
