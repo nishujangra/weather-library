@@ -261,6 +261,11 @@ To add new functionality, follow the modular structure:
 
 ---
 
+## License 🙌
+- The project is licensed under the [MIT License](./LICENSE.md)
+
+---
+
 ## Contact 📧
 For any questions or suggestions, feel free to reach out:
 - **Author:** Nishant
